@@ -11,9 +11,8 @@ gcc -fopenmp -o nRainhas nRainhas.c
 Tendo o código fonte compilado, execute o seguinte comando:
 
 ```bash
-nRainhas N T
+./nRainhas
 ```
-Onde "N" é o numero de rainhas a ser testado e "T" é o número de threads a serem utilizadas no ambiente OpenMP
 
 ## Membros do grupo
 
