@@ -18,17 +18,17 @@ int valido(int linha, int coluna) {
     return 1;
 }
 
-void busca(int linha) {
+void busca(int linha, int threads) {
     int i;
     if (linha == n) {
         encontrou = 1;
         return;
     }
-    #pragma omp parallel for shared(encontrou) num_threads(omp_get_num_threads())
+    #pragma omp parallel for shared(encontrou) num_threads(threads)
     for (i = 0; i < n; i++) {
         if (!encontrou && valido(linha, i)) {
             solucao[linha] = i;
-            busca(linha + 1);
+            busca(linha + 1, threads);
         }
     }
 }
@@ -42,7 +42,7 @@ int main() {
     scanf("%d", &t);
     omp_set_num_threads(t);
     start = omp_get_wtime();
-    busca(0);
+    busca(0,t);
     end = omp_get_wtime();
     if (encontrou) {
         printf("Solucao encontrada:\n");
@@ -51,7 +51,7 @@ int main() {
             for (j = 0; j < solucao[i]; j++) {
                 printf(". ");
             }
-            printf("Q ");
+            printf("R ");
             for (j = solucao[i] + 1; j < n; j++) {
                 printf(". ");
             }
