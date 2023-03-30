@@ -14,6 +14,9 @@ Tendo o código fonte compilado, execute o seguinte comando:
 ./nRainhas
 ```
 
+## Testes de performance
+Todos os testes foram realizados numa mesma máquina e os dados foram reunidos e disponibilizados [neste docs](https://docs.google.com/document/d/1fp5Aj1WLLztMhEsa9X2j13sIljrbPa014t-5-pe28xA/edit?usp=sharing)
+
 ## Membros do grupo
 
 <table>
