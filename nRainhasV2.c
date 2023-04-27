@@ -2,28 +2,28 @@
 #include <stdlib.h>
 #include <omp.h>
 
-int count = 0;
+int total = 0;
 
-int is_valid(int *board, int row, int col) {
+int valido(int *tabuleiro, int linha, int coluna) {
     int i, j;
-    for (i = 0; i < row; i++) {
-        if (board[i] == col || abs(i - row) == abs(board[i] - col)) {
+    for (i = 0; i < linha; i++) {
+        if (tabuleiro[i] == coluna || abs(i - linha) == abs(tabuleiro[i] - coluna)) {
             return 0;
         }
     }
     return 1;
 }
 
-void n_queens(int *board, int n, int row) {
+void busca(int *tabuleiro, int n, int linha) {
     int i;
-    if (row == n) {
+    if (linha == n) {
         #pragma omp atomic
-        count++;
+        total++;
     } else {
         for (i = 0; i < n; i++) {
-            if (is_valid(board, row, i)) {
-                board[row] = i;
-                n_queens(board, n, row+1);
+            if (valido(tabuleiro, linha, i)) {
+                tabuleiro[linha] = i;
+                busca(tabuleiro, n, linha+1);
             }
         }
     }
@@ -31,35 +31,35 @@ void n_queens(int *board, int n, int row) {
 
 int main() {
     int n, num_threads;
-    double start_time, end_time;
-    printf("Digite o valor de N: ");
+    double start, end;
+    printf("Digite o número de rainhas: ");
     scanf("%d", &n);
     printf("Digite o número de threads: ");
     scanf("%d", &num_threads);
-    int *board = (int*) malloc(sizeof(int) * n);
+    int *tabuleiro = (int*) malloc(sizeof(int) * n);
     int i;
     for (i = 0; i < n; i++) {
-        board[i] = -1;
+        tabuleiro[i] = -1;
     }
     omp_set_num_threads(num_threads);
-    start_time = omp_get_wtime();
+    start = omp_get_wtime();
     #pragma omp parallel
     {
-        int *board_private = (int*) malloc(sizeof(int) * n);
+        int *tabuleiro_privado = (int*) malloc(sizeof(int) * n);
         int j;
         for (j = 0; j < n; j++) {
-            board_private[j] = -1;
+            tabuleiro_privado[j] = -1;
         }
         #pragma omp for
         for (i = 0; i < n; i++) {
-            board_private[0] = i;
-            n_queens(board_private, n, 1);
+            tabuleiro_privado[0] = i;
+            busca(tabuleiro_privado, n, 1);
         }
-        free(board_private);
+        free(tabuleiro_privado);
     }
-    end_time = omp_get_wtime();
-    printf("Número total de soluções possíveis: %d\n", count);
-    printf("Tempo de execução: %f segundos\n", end_time - start_time);
-    free(board);
+    end = omp_get_wtime();
+    printf("Número total de soluções possíveis: %d\n", total);
+    printf("Tempo de execução: %f segundos\n", end - start);
+    free(tabuleiro);
     return 0;
 }
