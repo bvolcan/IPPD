@@ -2,64 +2,66 @@
 #include <stdlib.h>
 #include <omp.h>
 
+int n;
 int total = 0;
+int solucao[100][100];
 
-int valido(int *tabuleiro, int linha, int coluna) {
-    int i, j;
+int valido(int linha, int coluna, int thread) {
+    int i;
     for (i = 0; i < linha; i++) {
-        if (tabuleiro[i] == coluna || abs(i - linha) == abs(tabuleiro[i] - coluna)) {
+        if (solucao[i][thread] == coluna || abs(i - linha) == abs(solucao[i][thread] - coluna)) {
             return 0;
         }
     }
     return 1;
 }
 
-void busca(int *tabuleiro, int n, int linha) {
+void busca(int linha, int thread) {
     int i;
     if (linha == n) {
         #pragma omp atomic
         total++;
-    } else {
-        for (i = 0; i < n; i++) {
-            if (valido(tabuleiro, linha, i)) {
-                tabuleiro[linha] = i;
-                busca(tabuleiro, n, linha+1);
-            }
+    }
+    // #pragma omp parallel for
+    for (i = 0; i < n; i++) {
+        // printf("Thread %d, linha %d, coluna %d\n",omp_get_thread_num(), linha, i);
+        if (valido(linha, i, thread)) {
+            solucao[linha][thread] = i;
+            busca(linha + 1, thread);
         }
     }
 }
 
+void iniciaBusca() {
+    #pragma omp parallel for
+    for (int i = 0; i < n; i++)
+    {
+        int current_thread = omp_get_thread_num();
+        solucao[0][current_thread] = i;
+        busca(1, current_thread);
+    }
+}
+
 int main() {
-    int n, num_threads;
+    int t;
     double start, end;
     printf("Digite o número de rainhas: ");
     scanf("%d", &n);
-    printf("Digite o número de threads: ");
-    scanf("%d", &num_threads);
-    int *tabuleiro = (int*) malloc(sizeof(int) * n);
-    int i;
-    for (i = 0; i < n; i++) {
-        tabuleiro[i] = -1;
+    printf("Digite o numero de threads: ");
+    scanf("%d", &t);
+    while (t > omp_get_max_threads() || t < 1) {
+        printf("Digite o numero de threads: ");
+        scanf("%d", &t);
     }
-    omp_set_num_threads(num_threads);
+    omp_set_num_threads(t);
     start = omp_get_wtime();
-    #pragma omp parallel
-    {
-        int *tabuleiro_privado = (int*) malloc(sizeof(int) * n);
-        int j;
-        for (j = 0; j < n; j++) {
-            tabuleiro_privado[j] = -1;
-        }
-        #pragma omp for
-        for (i = 0; i < n; i++) {
-            tabuleiro_privado[0] = i;
-            busca(tabuleiro_privado, n, 1);
-        }
-        free(tabuleiro_privado);
-    }
+    iniciaBusca();
     end = omp_get_wtime();
-    printf("Número total de soluções possíveis: %d\n", total);
-    printf("Tempo de execução: %f segundos\n", end - start);
-    free(tabuleiro);
+    if (total > 0) {
+        printf("Soluções encontradas: %d\n", total);
+    } else {
+        printf("Nao ha solução para N=%d\n", n);
+    }
+    printf("Tempo de execucao: %.2f segundos\n", end - start);
     return 0;
 }
